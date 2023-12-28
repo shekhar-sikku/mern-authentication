@@ -2,38 +2,46 @@
 import styles from '../styles/Username.module.css';
 import toast, { Toaster } from 'react-hot-toast';
 import { useFormik } from 'formik';
-import { useNavigate } from 'react-router-dom';
-import { resetPasswordValidation } from '../helper/validate'
-
+import { Navigate, useNavigate } from 'react-router-dom';
+import { resetPasswordValidation } from '../helper/validate.js'
+import { resetPassword } from '../helper/helper.js';
+import { useAuthStore } from '../store/store.js';
+import useFetch from '../hooks/fetch.hook.js';
+import { useEffect } from 'react';
 
 const Reset = () => {
   const navigate = useNavigate();
+  const { username } = useAuthStore(state => state.auth);
+  const [{ isLoading, apiData, status, serverError }] = useFetch('createResetSession');
+
+  useEffect(() => {
+    console.log(apiData);
+  });
 
   const formik = useFormik({
     initialValues: {
-      password: 'admin@123',
-      confirm_pwd: 'admin@123'
+      password: '',
+      confirm_pwd: ''
     },
     validate: resetPasswordValidation,
     validateOnBlur: false,
     validateOnChange: false,
     onSubmit: async values => {
+      let resetPromise = resetPassword({ username, password: values.password });
 
-      console.log('password ' + values.password);
-      console.log('confirm password ' + values.confirm_pwd);
-      
-      // let resetPromise = 'resetPassword({ username, password: values.password }) ' + values
+      toast.promise(resetPromise, {
+        loading: 'Updating...',
+        success: <b>Reset Successfully...!</b>,
+        error: <b>Could not Reset!</b>
+      });
 
-      // toast.promise(resetPromise, {
-      //   loading: 'Updating...',
-      //   success: <b>Reset Successfully...!</b>,
-      //   error: <b>Could not Reset!</b>
-      // });
-
-      // resetPromise.then(function () { navigate('/password') })
-
+      resetPromise.then(function () { navigate('/password') });
     }
-  })
+  });
+
+  if (isLoading) return <h1 className='text-2xl font-bold'>isLoading</h1>;
+  if (serverError) return <h1 className='text-xl text-red-500'>{serverError.message}</h1>
+  if (status && status !== 201) return <Navigate to={'/password'} replace={true}></Navigate>
 
   return (
     <div className="container mx-auto">
@@ -51,9 +59,9 @@ const Reset = () => {
           <form className='py-20' onSubmit={formik.handleSubmit}>
             <div className="textbox flex flex-col items-center gap-6">
               <input {...formik.getFieldProps('password')} className={styles.text_box}
-                type="text" placeholder='New Password' />
+                type="password" placeholder='New Password' />
               <input {...formik.getFieldProps('confirm_pwd')} className={styles.text_box}
-                type="text" placeholder='Repeat Password' />
+                type="password" placeholder='Repeat Password' />
               <button className={`${styles.btn} bg-indigo-500`} type='submit'>Reset</button>
             </div>
           </form>

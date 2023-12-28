@@ -1,22 +1,49 @@
 /* eslint-disable no-unused-vars */
 import styles from '../styles/Username.module.css';
+import toast, { Toaster } from 'react-hot-toast';
 import { useEffect, useState } from "react";
-import { Toaster } from 'react-hot-toast';
 import { useNavigate } from "react-router-dom";
-
+import { useAuthStore } from '../store/store.js';
+import { generateOTP, verifyOTP } from '../helper/helper';
 
 const Recovery = () => {
   const navigate = useNavigate();
   const [OTP, setOTP] = useState();
+  const { username } = useAuthStore(state => state.auth);
+
+  useEffect(() => {
+    generateOTP(username).then((OTP) => {
+      if (OTP) return toast.success('OTP has been send to your email!');
+      return toast.error('Problem while generating OTP!')
+    })
+  }, [username]);
 
   async function onSubmit(e) {
     e.preventDefault();
-    console.log('otp' + OTP);
-    return navigate('/reset')
+    try {
+      let { status } = await verifyOTP({ username, code: OTP })
+      if (status === 201) {
+        toast.success('Verify Successfully!')
+        return navigate('/reset')
+      }
+    } catch (error) {
+      return toast.error('Wrong OTP! Check email again!')
+    }
   }
 
+  //** handler of resend OTP */
   function resendOTP() {
-    console.log('sending otp again');
+    let sentPromise = generateOTP(username);
+
+    toast.promise(sentPromise, {
+      loading: 'Sending...',
+      success: <b>OTP has been send to your email!</b>,
+      error: <b>Could not Send it!</b>,
+    });
+
+    sentPromise.then((OTP) => {
+      console.log(OTP)
+    });
   }
 
   return (

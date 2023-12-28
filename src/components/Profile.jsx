@@ -3,44 +3,54 @@ import avatar from '../assets/icons/profile.png';
 import convertToBase64 from '../helper/convert';
 import toast, { Toaster } from 'react-hot-toast';
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
 import { useFormik } from 'formik';
+import { Link, useNavigate } from 'react-router-dom'
 import { profileValidation } from '../helper/validate';
-
+import { updateUser } from '../helper/helper.js';
+import useFetch from '../hooks/fetch.hook.js';
 
 const Profile = () => {
   const navigate = useNavigate();
   const [file, setFile] = useState();
+  const [{ isLoading, apiData, serverError }] = useFetch();
 
   const formik = useFormik({
     initialValues: {
-      firstName: 'First Name',
-      lastName: 'Last Name',
-      email: 'email@mail.com',
-      mobile: '+123456789010',
-      address: '653345, New York, U.S.'
+      firstName: apiData?.firstName || '',
+      lastName: apiData?.lastName || '',
+      email: apiData?.email || '',
+      mobile: apiData?.mobile || '',
+      address: apiData?.address || ''
     },
+    enableReinitialize: true,
     validate: profileValidation,
     validateOnBlur: false,
     validateOnChange: false,
     onSubmit: async values => {
-      values = await Object.assign(values, { profile: file || '' })
-      let registerPromise = registerUser(values)
-      toast.promise(registerPromise, {
-        loading: 'Creating...',
-        success: <b>Register Successfully...!</b>,
-        error: <b>Could not Register.</b>
+      values = await Object.assign(values, { profile: file || apiData?.profile || '' });
+      let updatePromise = updateUser(values);
+      toast.promise(updatePromise, {
+        loading: 'Updating...',
+        success: <b>Update Successfully...!</b>,
+        error: <b>Could not Update!</b>
       });
-
-      registerPromise.then(function () { navigate('/') });
     }
-  })
+  });
 
-  /** formik doesn't support file upload so we need to create this handler */
+  //** formik doesn't support file upload so we need to create this handler */
   const onUpload = async (e) => {
     const base64 = await convertToBase64(e.target.files[0]);
     setFile(base64);
   }
+
+  //** logout handler function */
+  function userLogout() {
+    localStorage.removeItem('token');
+    navigate('/');
+  }
+
+  if (isLoading) return <h1 className='text-2xl font-bold'>isLoading</h1>;
+  if (serverError) return <h1 className='text-xl text-red-500'>{serverError.message}</h1>
 
   return (
     <div className="container mx-auto">
@@ -56,7 +66,7 @@ const Profile = () => {
           <form className='py-1' onSubmit={formik.handleSubmit}>
             <div className='profile flex justify-center py-4'>
               <label htmlFor="profile">
-                <img src={file || avatar} className={`${styles.profile_img}`} alt="avatar" />
+                <img src={apiData?.profile || file || avatar} className={`${styles.profile_img}`} alt="avatar" />
               </label>
               <input onChange={onUpload} type="file" id='profile' name='profile' />
             </div>
@@ -84,7 +94,7 @@ const Profile = () => {
             </div>
             <div className="text-center py-4">
               <span className='text-gray-500'>
-                Come Back Later?  <Link className='text-red-500' to="/">Logout</Link>
+                Come Back Later?  <Link className='text-red-500' onClick={userLogout} to="/">Logout</Link>
               </span>
             </div>
           </form>

@@ -6,11 +6,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useFormik } from 'formik';
 import { registerValidation } from '../helper/validate';
-// import { registerUser } from '../helper/helper'
-
-function registerUser(params) {
-  console.log(params);
-}
+import { registerUser } from '../helper/helper.js';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -18,16 +14,19 @@ const Register = () => {
 
   const formik = useFormik({
     initialValues: {
-      email: 'email@mail.com',
-      username: 'example123',
-      password: 'admin@123'
+      email: '',
+      username: '',
+      password: ''
     },
     validate: registerValidation,
     validateOnBlur: false,
     validateOnChange: false,
     onSubmit: async values => {
       values = await Object.assign(values, { profile: file || '' })
-      let registerPromise = registerUser(values)
+
+      // console.log(values);
+      let registerPromise = registerUser(values);
+
       toast.promise(registerPromise, {
         loading: 'Creating...',
         success: <b>Register Successfully...!</b>,

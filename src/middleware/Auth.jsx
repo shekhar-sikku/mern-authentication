@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 import { Navigate } from "react-router-dom";
-import { useAuthStore } from "../store/store";
+import { useAuthStore } from "../store/store.js";
 
 export const AuthorizeUser = ({ children }) => {
   const token = localStorage.getItem('token');

@@ -190,7 +190,7 @@ export async function verifyOTP(req, res) {
     if (parseInt(req.app.locals.OTP) === parseInt(code)) {
         req.app.locals.OTP = null;
         req.app.locals.resetSession = true;
-        return res.status(201).send({ msg: 'Verify Successfully!' })
+        return res.status(201).send({ msg: 'Verify Successfully!' });
     }
     return res.status(400).send({ error: "Invalid OTP" });
 }
@@ -200,9 +200,9 @@ export async function verifyOTP(req, res) {
 /** GET: http://localhost:8080/api/createResetSession */
 export async function createResetSession(req, res) {
     if (req.app.locals.resetSession) {
-        return res.status(201).send({ msg: "Access Granted!" })
+        return res.status(201).send({ flag: req.app.locals.resetSession });
     }
-    return res.status(440).send({ error: "Session expired!" })
+    return res.status(440).send({ error: "Session expired!" });
 }
 
 
